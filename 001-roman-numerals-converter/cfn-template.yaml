@@ -48,12 +48,11 @@ Resources:
         dnf install python3-pip -y
         pip3 install flask
         dnf install git -y
-        FOLDER="https://raw.githubusercontent.com/cnrgrl/aws-project-01/cf-28-03/001-roman-numerals-converter/cfn-templates"
+        FOLDER="https://raw.githubusercontent.com/cnrgrl/aws-project-01/cf-28-03/001-roman-nhttps://raw.githubusercontent.com/cnrgrl/aws-project-01/cf-28-03/001-roman-numerals-converter/templates"
         cd /home/ec2-user
         wget -P templates ${FOLDER}/index.html
         wget -P templates ${FOLDER}/result.html
-        wget https://github.com/cnrgrl/aws-project-01/blob/cf-28-03/001-roman-numerals-converter/roman-numerals-converter-app.py
-        python3 roman-numerals-converter-app.py
+        wget https://raw.githubusercontent.com/cnrgrl/aws-project-01/cf-28-03/001-roman-numerals-converter/roman-numerals-converter-app.py
 Outputs: # ciktiyi görebilecegimiz URL adresini !GetAtt ile cekiyoruz
   WebsiteURL:
     Value: !Sub 
