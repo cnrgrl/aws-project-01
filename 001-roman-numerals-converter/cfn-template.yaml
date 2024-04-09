@@ -29,59 +29,30 @@ Resources:
           IpProtocol: tcp
           ToPort: 80
           
-  Converterhost:
+  ConverterHost:
     Type: AWS::EC2::Instance
     Properties:
-      
       ImageId: !Ref LatestAmiId
       InstanceType: t2.micro
       KeyName: !Ref KeyName
-      SecurityGroupIds: 
+      SecurityGroupIds:
         - !Ref ConverterSecGrp
-      Tags: 
+      Tags:
         - Key: Name
           Value: !Sub Web Server of ${AWS::StackName} # pseudo parameter ile dokumandan AWS::StackName ismini cekebiliriz. Bu henüz olusmamis bir kaynak oldugu icin !Sub Fonksiyonunu kullaniyoruz.
       UserData: !Base64 | # Basta Base64olmali.Sonra  Python, flask, git, github repo vs tanimli ve kurulu olmali.
         #! /bin/bash
-        # https://github.com/cnrgrl/aws-project-01/blob/cf-28-03/001-roman-numerals-converter/cfn-templates
-        Resources:
-    ConverterSecGrp:
-      Type: AWS::EC2::SecurityGroup
-      Properties:
-        GroupDescription: Enable http and ssh (80 and 22 port)
-        SecurityGroupIngress:
-          - CidrIp: 0.0.0.0/0
-            FromPort: 22
-            IpProtocol: tcp
-            ToPort: 22
-          - CidrIp: 0.0.0.0/0
-            FromPort: 80
-            IpProtocol: tcp
-            ToPort: 80
-    ConverterHost:
-      Type: AWS::EC2::Instance
-      Properties:
-        ImageId: !Ref LatestAmiId
-        InstanceType: t2.micro
-        KeyName: !Ref KeyName
-        SecurityGroupIds:
-          - !Ref ConverterSecGrp
-        Tags:
-          - Key: Name
-            Value: !Sub Web Server of ${AWS::StackName}
-        UserData: !Base64 |
-          #! /bin/bash
-          dnf update -y
-          dnf install python3 -y
-          dnf install python3-pip -y
-          pip3 install flask
-          dnf install git -y
-          FOLDER="https://raw.githubusercontent.com/cnrgrl/aws-project-01/cf-28-03/001-roman-numerals-converter/cfn-templates"
-          cd /home/ec2-user
-          wget -P templates ${FOLDER}/index.html
-          wget -P templates ${FOLDER}/result.html
-          wget https://github.com/cnrgrl/aws-project-01/blob/cf-28-03/001-roman-numerals-converter/roman-numerals-converter-app.py
-          python3 roman-numerals-converter-app.py
+        dnf update -y
+        dnf install python3 -y
+        dnf install python3-pip -y
+        pip3 install flask
+        dnf install git -y
+        FOLDER="https://raw.githubusercontent.com/cnrgrl/aws-project-01/cf-28-03/001-roman-numerals-converter/cfn-templates"
+        cd /home/ec2-user
+        wget -P templates ${FOLDER}/index.html
+        wget -P templates ${FOLDER}/result.html
+        wget https://github.com/cnrgrl/aws-project-01/blob/cf-28-03/001-roman-numerals-converter/roman-numerals-converter-app.py
+        python3 roman-numerals-converter-app.py
 Outputs: # ciktiyi görebilecegimiz URL adresini !GetAtt ile cekiyoruz
   WebsiteURL:
     Value: !Sub
