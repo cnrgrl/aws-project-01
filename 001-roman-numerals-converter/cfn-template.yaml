@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  CloudFormation Template for Roman Numerals Converter Application.
+  This template creates Python Flask Web Application on Amazon Linux 2023
+  EC2 Instance with custom security group allowing http connections on port 80 and SSH connection on port 22.
+  Roman Numerals Converter Application is downloaded from Github repository, then installed on Flask.
+
+Parameters:
+  KeyName:
+    Description: Enter your keyname
+    Type: AWS::EC2::KeyPair::KeyName
+
+  LatestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64'
+
+  
+Resources:
+  ConverterSecGrp:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable http and ssh (80 and 27 port) # Required
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: 22
+          IpProtocol: tcp
+          ToPort: 22
+        - CidrIp: 0.0.0.0/0
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+          
+  ConverterHost:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: t2.micro
+      KeyName: !Ref KeyName
+      SecurityGroupIds:
+        - !Ref ConverterSecGrp
+      Tags:
+        - Key: Name
+          Value: !Sub Web Server of ${AWS::StackName} # pseudo parameter ile dokumandan AWS::StackName ismini cekebiliriz. Bu henüz olusmamis bir kaynak oldugu icin !Sub Fonksiyonunu kullaniyoruz.
+      UserData: !Base64 | # Basta Base64olmali.Sonra  Python, flask, git, github repo vs tanimli ve kurulu olmali.
+        #! /bin/bash
+        dnf update -y
+        dnf install python3 -y
+        dnf install python3-pip -y
+        pip3 install flask
+        dnf install git -y
+        FOLDER="https://raw.githubusercontent.com/cnrgrl/aws-project-01/cf-28-03/001-roman-nhttps://raw.githubusercontent.com/cnrgrl/aws-project-01/cf-28-03/001-roman-numerals-converter/templates"
+        cd /home/ec2-user
+        wget -P templates ${FOLDER}/index.html
+        wget -P templates ${FOLDER}/result.html
+        wget https://raw.githubusercontent.com/cnrgrl/aws-project-01/cf-28-03/001-roman-numerals-converter/roman-numerals-converter-app.py
+Outputs: # ciktiyi görebilecegimiz URL adresini !GetAtt ile cekiyoruz
+  WebsiteURL:
+    Value: !Sub 
+      - http://${UrlName}
+      - UrlName: !GetAtt ConverterHost.PublicDnsName
+    Description: Roman Numerals Converter Application URL
+
+
+
+
+
+
+
+
+
+
+
