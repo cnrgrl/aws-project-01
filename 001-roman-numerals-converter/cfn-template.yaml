@@ -6,8 +6,9 @@ Description: |
   Roman Numerals Converter Application is downloaded from Github repository, then installed on Flask.
 
 Parameters:
-  Description: Enter your keyname
-  Type: AWS::EC2::KeyPair::KeyName
+  KeyName:
+    Description: Enter your keyname
+    Type: AWS::EC2::KeyPair::KeyName
 
   LatestAmiId:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
@@ -55,10 +56,12 @@ Resources:
         python3 roman-numerals-converter-app.py
 Outputs: # ciktiyi görebilecegimiz URL adresini !GetAtt ile cekiyoruz
   WebsiteURL:
-    Value: !Sub
+    Value: !Sub 
       - http://${UrlName}
-      - UrlName: !GetAtt
-  
+      - UrlName: !GetAtt ConverterHost.PublicDnsName
+    Description: Roman Numerals Converter Application URL
+
+
 
 
 
