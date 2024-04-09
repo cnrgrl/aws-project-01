@@ -41,18 +41,17 @@ Resources:
       ImageId: !Ref imageID
       InstanceType: !Ref instanceType
       KeyName: !Ref keyPair
-      RamdiskId: "String"
       SecurityGroupIds: 
         - !Ref mySecGrp
       Tags: 
-        - Key:Name
-          Value: !Sub Web Server of $(AWS::Stackname)
-          w
+        - Key: Name
+          Value: !Sub Web Server of ${AWS::StackName}
       UserData: !Base64 |
+
         #! /bin/bash
         dnf update -y
         dnf install httpd -y
-        FOLDER="https://github.com/cnrgrl/aws-project-01/tree/cf-28-03/101-kittens-carousel-static-website-ec2"
+        FOLDER="https://raw.githubusercontent.com/cnrgrl/aws-project-01/cf-28-03/101-kittens-carousel-static-website-ec2/static-web"
         cd /var/www/html
         wget ${FOLDER}/index.html
         wget ${FOLDER}/cat0.jpg
@@ -66,5 +65,5 @@ Outputs:
   webSiteURL:
     Description: URL of website
     Value: !Sub
-      - http://$(PublicDNS)
+      - http://${PublicDNS}
       - PublicDNS: !GetAtt myWebServer.PublicDnsName
