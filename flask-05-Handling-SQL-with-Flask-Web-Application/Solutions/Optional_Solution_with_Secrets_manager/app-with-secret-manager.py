@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 # Function to retrieve secrets from AWS Secrets Manager
 def get_secret():
-    secret_name = "oktayflask"
+    secret_name = "cnrsecretflask05"
     region_name = "us-east-1"
 
     session = boto3.session.Session()
