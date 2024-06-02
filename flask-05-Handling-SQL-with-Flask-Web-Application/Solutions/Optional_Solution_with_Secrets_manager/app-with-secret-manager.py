@@ -1,16 +1,17 @@
+import os
 import boto3
 from botocore.exceptions import ClientError
-from flask import Flask
+from flask import Flask, render_template, request, flash
 from flaskext.mysql import MySQL
 import json
-from flask import request, render_template
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
 
-# Function to retrieve secrets from AWS Secrets Manager
+# Retrieve secrets from AWS Secrets Manager
 def get_secret():
-    secret_name = "oktayflask"
-    region_name = "us-east-1"
+    secret_name = os.environ.get("SECRET_NAME")
+    region_name = os.environ.get("REGION_NAME")
 
     session = boto3.session.Session()
     client = session.client(
@@ -30,11 +31,7 @@ def get_secret():
     
     return secret
 
-# Retrieve the secrets
 secrets = get_secret()
-
-
-app = Flask(__name__)
 
 # Configure mysql database
 app.config['MYSQL_DATABASE_HOST'] = secrets['host']
@@ -45,8 +42,6 @@ app.config['MYSQL_DATABASE_PORT'] = secrets['port']
 mysql = MySQL()
 mysql.init_app(app)
 connection = mysql.connect()
-connection.autocommit(True)
-cursor = connection.cursor()
 
 # Create users table within MySQL db and populate with sample data
 # Execute the code below only once.
@@ -69,18 +64,18 @@ VALUES
 	("aynur", "aynur@porche.com"),
     ("fatih", "fatih@huwaei.com");
 """
+cursor = connection.cursor()
 cursor.execute(drop_table)
 cursor.execute(users_table)
 cursor.execute(data)
+connection.commit()
 
 # Write a function named `find_emails` which find emails using keyword from the user table in the db,
 # and returns result as tuples `(name, email)`.
 
 def find_emails(keyword):
-    query = f"""
-    SELECT * FROM users WHERE username like '%{keyword}%';
-    """
-    cursor.execute(query)
+    query = "SELECT * FROM users WHERE username LIKE %s;"
+    cursor.execute(query, ('%' + keyword + '%',))
     result = cursor.fetchall()
     user_emails = [(row[0], row[1]) for row in result]
     # if there is no user with given name in the db, then give warning
@@ -90,32 +85,26 @@ def find_emails(keyword):
 
 # Write a function named `insert_email` which adds new email to users table the db.
 def insert_email(name, email):
-    query = f"""
-    SELECT * FROM users WHERE username like '{name}';
-    """
-    cursor.execute(query)
+    query = "SELECT * FROM users WHERE username = %s;"
+    cursor.execute(query, (name,))
     result = cursor.fetchall()
     # default text
     response = ''
     # if user input are None (null) give warning
     if len(name) == 0 or len(email) == 0:
-        response = 'Username or email can not be empty!!'
+        flash('Username or email can not be empty!!')
     # if there is no same user name in the db, then insert the new one
     elif not any(result):
-        insert = f"""
-        INSERT INTO users
-        VALUES ('{name}', '{email}');
-        """
-        cursor.execute(insert)
+        insert = "INSERT INTO users (username, email) VALUES (%s, %s);"
+        cursor.execute(insert, (name, email))
+        connection.commit()
         response = f'User {name} and {email} have been added successfully'
     # if there is user with same name, then give warning
     else:
-        response = f'User {name} already exits.'
+        flash(f'User {name} already exits.')
     return response
 
-# Write a function named `emails` which finds email addresses by keyword using `GET` and `POST` methods,
-# using template files named `emails.html` given under `templates` folder
-# and assign to the static route of ('/')
+# Write a function named `emails`
 @app.route('/', methods=['GET', 'POST'])
 def emails():
     if request.method == 'POST':
@@ -125,9 +114,7 @@ def emails():
     else:
         return render_template('emails.html', show_result=False)
 
-# Write a function named `add_email` which inserts new email to the database using `GET` and `POST` methods,
-# using template files named `add-email.html` given under `templates` folder
-# and assign to the static route of ('add')
+# Write a function named `add_email`
 @app.route('/add', methods=['GET', 'POST'])
 def add_email():
     if request.method == 'POST':
@@ -138,7 +125,6 @@ def add_email():
     else:
         return render_template('add-email.html', show_result=False)
 
-# Add a statement to run the Flask application which can be reached from any host on port 80.
+# Add a statement to run the Flask application
 if __name__ == '__main__':
-    app.run(debug=True)
-    # app.run(host='0.0.0.0', port=80)
+    app.run(host='0.0.0.0', port=80, debug=True)
